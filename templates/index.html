@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tierlister</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        header {
+            text-align: center;
+            padding: 1.2rem 1rem .8rem;
+            background: #16213e;
+            border-bottom: 2px solid #0f3460;
+        }
+        header h1 { font-size: 1.6rem; letter-spacing: .04em; }
+        header h1 span { color: #e94560; }
+
+        /* ── Tier Grid ── */
+        .tier-list {
+            max-width: 960px;
+            margin: 1.5rem auto 0;
+            padding: 0 1rem;
+        }
+        .tier-row {
+            display: flex;
+            min-height: 80px;
+            border: 2px solid #0f3460;
+            border-bottom: none;
+        }
+        .tier-row:last-child { border-bottom: 2px solid #0f3460; }
+        .tier-label {
+            width: 72px;
+            min-width: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.5rem;
+            user-select: none;
+        }
+        .tier-items {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            align-content: flex-start;
+            gap: 4px;
+            padding: 4px;
+            min-height: 80px;
+            background: #1a1a2e;
+            transition: background .15s;
+        }
+        .tier-items.drag-over { background: #222244; }
+
+        /* tier colors */
+        .tier-row[data-tier="S"] .tier-label { background: #ff7f7f; color: #000; }
+        .tier-row[data-tier="A"] .tier-label { background: #ffbf7f; color: #000; }
+        .tier-row[data-tier="B"] .tier-label { background: #ffdf7f; color: #000; }
+        .tier-row[data-tier="C"] .tier-label { background: #ffff7f; color: #000; }
+        .tier-row[data-tier="D"] .tier-label { background: #bfff7f; color: #000; }
+        .tier-row[data-tier="F"] .tier-label { background: #7fbfff; color: #000; }
+
+        /* ── Item Tray ── */
+        .tray-section {
+            max-width: 960px;
+            margin: 1.5rem auto;
+            padding: 0 1rem;
+        }
+        .tray-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: .5rem;
+        }
+        .tray-header h2 { font-size: 1rem; color: #aaa; font-weight: 600; }
+        .add-btn {
+            width: 36px; height: 36px;
+            border: 2px dashed #555;
+            border-radius: 8px;
+            background: transparent;
+            color: #888;
+            font-size: 1.4rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .15s;
+        }
+        .add-btn:hover { border-color: #e94560; color: #e94560; }
+        .tray {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            padding: 8px;
+            min-height: 88px;
+            background: #16213e;
+            border: 2px solid #0f3460;
+            border-radius: 8px;
+            align-items: flex-start;
+            align-content: flex-start;
+            transition: background .15s;
+        }
+        .tray.drag-over { background: #222244; }
+
+        /* ── Draggable Image Tile ── */
+        .tile {
+            width: 72px; height: 72px;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: grab;
+            position: relative;
+            flex-shrink: 0;
+            transition: transform .1s, box-shadow .1s;
+        }
+        .tile:active { cursor: grabbing; }
+        .tile.dragging { opacity: .4; transform: scale(.95); }
+        .tile img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            display: block;
+            pointer-events: none;
+        }
+        .tile .remove-btn {
+            position: absolute;
+            top: 2px; right: 2px;
+            width: 18px; height: 18px;
+            background: rgba(0,0,0,.7);
+            border: none;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        .tile:hover .remove-btn { display: flex; }
+
+        /* ── Search Overlay ── */
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.7);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        .overlay.active { display: flex; }
+        .overlay-box {
+            background: #16213e;
+            border: 2px solid #0f3460;
+            border-radius: 12px;
+            padding: 1.5rem;
+            width: 480px;
+            max-width: 95vw;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .overlay-box h2 {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .overlay-box h2 button {
+            background: none; border: none; color: #888;
+            font-size: 1.4rem; cursor: pointer;
+        }
+        .overlay-box h2 button:hover { color: #e94560; }
+        .search-form {
+            display: flex;
+            gap: .5rem;
+            margin-bottom: 1rem;
+        }
+        .search-form input {
+            flex: 1;
+            padding: .55rem .8rem;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background: #1a1a2e;
+            color: #eee;
+            font-size: .95rem;
+        }
+        .search-form input:focus { outline: none; border-color: #e94560; }
+        .search-form button {
+            padding: .55rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            background: #e94560;
+            color: #fff;
+            font-size: .95rem;
+            cursor: pointer;
+        }
+        .search-form button:hover { background: #c73650; }
+        .search-form button:disabled { opacity: .5; cursor: default; }
+        .search-results {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: .5rem;
+        }
+        .search-results .result-card {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: border-color .15s, transform .15s;
+        }
+        .search-results .result-card:hover {
+            border-color: #e94560;
+            transform: scale(1.05);
+        }
+        .search-results .result-card img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            display: block;
+            pointer-events: none;
+        }
+        .search-status {
+            text-align: center;
+            color: #666;
+            padding: 2rem 0;
+            font-size: .95rem;
+        }
+        .search-error {
+            text-align: center;
+            color: #e94560;
+            padding: 1rem 0;
+            font-size: .9rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1><span>Tier</span>lister</h1>
+</header>
+
+<!-- Tier Rows -->
+<div class="tier-list">
+    <div class="tier-row" data-tier="S">
+        <div class="tier-label">S</div>
+        <div class="tier-items" data-zone="S"></div>
+    </div>
+    <div class="tier-row" data-tier="A">
+        <div class="tier-label">A</div>
+        <div class="tier-items" data-zone="A"></div>
+    </div>
+    <div class="tier-row" data-tier="B">
+        <div class="tier-label">B</div>
+        <div class="tier-items" data-zone="B"></div>
+    </div>
+    <div class="tier-row" data-tier="C">
+        <div class="tier-label">C</div>
+        <div class="tier-items" data-zone="C"></div>
+    </div>
+    <div class="tier-row" data-tier="D">
+        <div class="tier-label">D</div>
+        <div class="tier-items" data-zone="D"></div>
+    </div>
+    <div class="tier-row" data-tier="F">
+        <div class="tier-label">F</div>
+        <div class="tier-items" data-zone="F"></div>
+    </div>
+</div>
+
+<!-- Item Tray -->
+<div class="tray-section">
+    <div class="tray-header">
+        <h2>Item Tray</h2>
+        <button class="add-btn" id="addBtn" title="Add image">+</button>
+    </div>
+    <div class="tray" data-zone="tray"></div>
+</div>
+
+<!-- Search Overlay -->
+<div class="overlay" id="overlay">
+    <div class="overlay-box">
+        <h2>
+            Search Images
+            <button id="closeOverlay">&times;</button>
+        </h2>
+        <div class="search-form">
+            <input type="text" id="searchInput" placeholder="Search for images…" autocomplete="off">
+            <button id="searchBtn">Search</button>
+        </div>
+        <div id="searchResults" class="search-results"></div>
+        <div id="searchStatus" class="search-status">Search for something to add to your tier list.</div>
+    </div>
+</div>
+
+<script>
+(function () {
+    /* ── Drag & Drop ── */
+    const zones = document.querySelectorAll('[data-zone]');
+    let draggedTile = null;
+
+    function makeDraggable(tile) {
+        tile.setAttribute('draggable', 'true');
+        tile.addEventListener('dragstart', e => {
+            draggedTile = tile;
+            tile.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        tile.addEventListener('dragend', () => {
+            tile.classList.remove('dragging');
+            draggedTile = null;
+            zones.forEach(z => z.classList.remove('drag-over'));
+        });
+    }
+
+    zones.forEach(zone => {
+        zone.addEventListener('dragover', e => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            zone.classList.add('drag-over');
+        });
+        zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+        zone.addEventListener('drop', e => {
+            e.preventDefault();
+            zone.classList.remove('drag-over');
+            if (draggedTile) {
+                zone.appendChild(draggedTile);
+            }
+        });
+    });
+
+    /* ── Create tile from thumbnail url ── */
+    function createTile(src, title) {
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        tile.title = title || '';
+
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = title || '';
+        tile.appendChild(img);
+
+        const btn = document.createElement('button');
+        btn.className = 'remove-btn';
+        btn.textContent = '×';
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            tile.remove();
+        });
+        tile.appendChild(btn);
+
+        makeDraggable(tile);
+        return tile;
+    }
+
+    /* ── Overlay Controls ── */
+    const overlay = document.getElementById('overlay');
+    const addBtn = document.getElementById('addBtn');
+    const closeOverlay = document.getElementById('closeOverlay');
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const searchResults = document.getElementById('searchResults');
+    const searchStatus = document.getElementById('searchStatus');
+    const tray = document.querySelector('[data-zone="tray"]');
+
+    addBtn.addEventListener('click', () => {
+        overlay.classList.add('active');
+        searchInput.focus();
+    });
+    closeOverlay.addEventListener('click', () => overlay.classList.remove('active'));
+    overlay.addEventListener('click', e => {
+        if (e.target === overlay) overlay.classList.remove('active');
+    });
+
+    /* ── Search ── */
+    async function doSearch() {
+        const query = searchInput.value.trim();
+        if (!query) return;
+
+        searchResults.innerHTML = '';
+        searchStatus.textContent = 'Searching…';
+        searchStatus.className = 'search-status';
+        searchBtn.disabled = true;
+
+        try {
+            const res = await fetch('/api/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query }),
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                searchStatus.textContent = data.error || 'Search failed.';
+                searchStatus.className = 'search-error';
+                return;
+            }
+
+            if (!data.images || data.images.length === 0) {
+                searchStatus.textContent = 'No results found.';
+                return;
+            }
+
+            searchStatus.textContent = '';
+            data.images.forEach(img => {
+                const card = document.createElement('div');
+                card.className = 'result-card';
+
+                const imgEl = document.createElement('img');
+                imgEl.src = img.thumbnail;
+                imgEl.alt = img.title || '';
+                card.appendChild(imgEl);
+
+                card.addEventListener('click', () => {
+                    tray.appendChild(createTile(img.thumbnail, img.title));
+                    overlay.classList.remove('active');
+                    searchResults.innerHTML = '';
+                    searchStatus.textContent = 'Search for something to add to your tier list.';
+                    searchInput.value = '';
+                });
+
+                searchResults.appendChild(card);
+            });
+        } catch (err) {
+            searchStatus.textContent = 'Network error. Please try again.';
+            searchStatus.className = 'search-error';
+        } finally {
+            searchBtn.disabled = false;
+        }
+    }
+
+    searchBtn.addEventListener('click', doSearch);
+    searchInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') doSearch();
+    });
+})();
+</script>
+
+</body>
+</html>
