@@ -1,18 +1,23 @@
 import os
 import hashlib
 import json
+import logging
 import sqlite3
 import base64
+import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 
 import requests as http_requests
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response
 from serpapi.google_search import GoogleSearch
 from dotenv import load_dotenv
 from PIL import Image
 
 load_dotenv()
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -94,20 +99,22 @@ def _gemini_canonicalize(query: str) -> str:
     }
     try:
         resp = http_requests.post(
-            url, params={"key": api_key}, json=payload, timeout=10
+            url, params={"key": api_key}, json=payload, timeout=30
         )
         resp.raise_for_status()
-        text = (
+        parts = (
             resp.json()
             .get("candidates", [{}])[0]
             .get("content", {})
-            .get("parts", [{}])[0]
-            .get("text", "")
-            .strip()
+            .get("parts", [])
         )
+        text = ""
+        for part in parts:
+            if not part.get("thought"):
+                text = part.get("text", "").strip()
         return text if text else query
     except Exception as e:
-        print(f"[canonicalize] Gemini error: {e}")
+        logger.error(f"[canonicalize] Gemini error: {e}")
         return query
 
 
@@ -209,17 +216,19 @@ def _generate_item_list(category: str) -> list[str]:
     }
     try:
         resp = http_requests.post(
-            url, params={"key": api_key}, json=payload, timeout=15
+            url, params={"key": api_key}, json=payload, timeout=30
         )
         resp.raise_for_status()
-        text = (
+        parts = (
             resp.json()
             .get("candidates", [{}])[0]
             .get("content", {})
-            .get("parts", [{}])[0]
-            .get("text", "")
-            .strip()
+            .get("parts", [])
         )
+        text = ""
+        for part in parts:
+            if not part.get("thought"):
+                text = part.get("text", "").strip()
         # Strip markdown code fences if present
         if text.startswith("```"):
             text = text.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
@@ -228,7 +237,7 @@ def _generate_item_list(category: str) -> list[str]:
             return [str(i).strip() for i in items if str(i).strip()]
         return []
     except Exception as e:
-        print(f"[batch-generate] Gemini error: {e}")
+        logger.error(f"[batch-generate] Gemini error: {e}")
         return []
 
 
@@ -350,6 +359,19 @@ def batch_search():
         results.append(entry)
 
     return jsonify({"results": results})
+
+
+@app.route("/logs")
+def view_logs():
+    lines = request.args.get("n", "200")
+    try:
+        result = subprocess.run(
+            ["journalctl", "-u", "tierlister", "--no-pager", "-n", lines],
+            capture_output=True, text=True, timeout=5,
+        )
+        return Response(result.stdout or result.stderr, mimetype="text/plain")
+    except Exception as e:
+        return Response(f"Error reading logs: {e}", mimetype="text/plain"), 500
 
 
 if __name__ == "__main__":
