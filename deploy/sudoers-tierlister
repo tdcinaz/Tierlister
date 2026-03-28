@@ -1,0 +1,3 @@
+# Allow the ubuntu user to restart tierlister without a password.
+# Install: sudo cp deploy/sudoers-tierlister /etc/sudoers.d/tierlister
+ubuntu ALL=(ALL) NOPASSWD: /bin/systemctl restart tierlister, /bin/systemctl stop tierlister, /bin/systemctl start tierlister, /bin/systemctl daemon-reload
