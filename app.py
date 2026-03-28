@@ -94,7 +94,7 @@ def _gemini_canonicalize(query: str) -> str:
         }],
         "generationConfig": {
             "temperature": 0,
-            "maxOutputTokens": 60,
+            "maxOutputTokens": 2048,
         },
     }
     try:
@@ -211,7 +211,7 @@ def _generate_item_list(category: str) -> list[str]:
         }],
         "generationConfig": {
             "temperature": 0,
-            "maxOutputTokens": 1024,
+            "maxOutputTokens": 8192,
         },
     }
     try:
