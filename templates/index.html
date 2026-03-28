@@ -60,6 +60,18 @@
         }
         .tier-items.drag-over { background: #222244; }
 
+        /* ── Responsive ── */
+        @media (max-width: 600px) {
+            .tier-list { padding: 0 .4rem; }
+            .tier-label { width: 48px; min-width: 48px; font-size: 1.1rem; }
+            .tier-row { min-height: 60px; }
+            .tier-items { min-height: 60px; }
+            .tile { width: 56px; height: 56px; }
+            .tray-section { padding: 0 .4rem; }
+            .tray { min-height: 68px; }
+            header h1 { font-size: 1.2rem; }
+        }
+
         /* tier colors */
         .tier-row[data-tier="S"] .tier-label { background: #ff7f7f; color: #000; }
         .tier-row[data-tier="A"] .tier-label { background: #ffbf7f; color: #000; }
@@ -131,12 +143,12 @@
         .tile .remove-btn {
             position: absolute;
             top: 2px; right: 2px;
-            width: 18px; height: 18px;
-            background: rgba(0,0,0,.7);
+            width: 20px; height: 20px;
+            background: rgba(0,0,0,.75);
             border: none;
             border-radius: 50%;
             color: #fff;
-            font-size: 12px;
+            font-size: 13px;
             cursor: pointer;
             display: none;
             align-items: center;
@@ -144,6 +156,10 @@
             line-height: 1;
         }
         .tile:hover .remove-btn { display: flex; }
+        /* Always show remove btn on touch devices */
+        @media (hover: none) {
+            .tile .remove-btn { display: flex; }
+        }
 
         /* ── Search Overlay ── */
         .overlay {
@@ -161,7 +177,7 @@
             border: 2px solid #0f3460;
             border-radius: 12px;
             padding: 1.5rem;
-            width: 480px;
+            width: 640px;
             max-width: 95vw;
             max-height: 90vh;
             overflow-y: auto;
@@ -183,9 +199,14 @@
             gap: .5rem;
             margin-bottom: 1rem;
         }
-        .search-form input {
+        .search-form .input-wrap {
             flex: 1;
+            position: relative;
+        }
+        .search-form input {
+            width: 100%;
             padding: .55rem .8rem;
+            padding-right: 2.2rem;
             border: 2px solid #333;
             border-radius: 8px;
             background: #1a1a2e;
@@ -193,6 +214,20 @@
             font-size: .95rem;
         }
         .search-form input:focus { outline: none; border-color: #e94560; }
+        .spinner {
+            display: none;
+            position: absolute;
+            right: .6rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px; height: 18px;
+            border: 2.5px solid #444;
+            border-top-color: #e94560;
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+        }
+        .spinner.active { display: block; }
+        @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
         .search-form button {
             padding: .55rem 1.2rem;
             border: none;
@@ -207,7 +242,7 @@
         .search-results {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: .5rem;
+            gap: .6rem;
         }
         .search-results .result-card {
             aspect-ratio: 1;
@@ -227,6 +262,12 @@
             display: block;
             pointer-events: none;
         }
+        @media (max-width: 600px) {
+            .overlay-box { padding: 1rem; }
+            .search-results { grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+            .search-form input { font-size: 1rem; }
+            .search-form button { padding: .55rem .8rem; }
+        }
         .search-status {
             text-align: center;
             color: #666;
@@ -239,6 +280,72 @@
             padding: 1rem 0;
             font-size: .9rem;
         }
+
+        /* ── Batch Mode ── */
+        .tray-header-buttons {
+            display: flex;
+            gap: .4rem;
+            align-items: center;
+        }
+        .batch-btn {
+            height: 36px;
+            padding: 0 .7rem;
+            border: 2px dashed #555;
+            border-radius: 8px;
+            background: transparent;
+            color: #888;
+            font-size: .75rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: .3rem;
+            transition: all .15s;
+            white-space: nowrap;
+        }
+        .batch-btn:hover { border-color: #e94560; color: #e94560; }
+        .batch-progress {
+            font-size: .85rem;
+            color: #aaa;
+            margin-bottom: .6rem;
+        }
+        .batch-progress strong { color: #e94560; }
+        .batch-item-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #eee;
+            margin-bottom: .8rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+        .batch-item-label .skip-btn {
+            font-size: .75rem;
+            padding: .2rem .6rem;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            transition: all .15s;
+        }
+        .batch-item-label .skip-btn:hover { border-color: #e94560; color: #e94560; }
+        .batch-items-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .4rem;
+            margin-bottom: 1rem;
+        }
+        .batch-tag {
+            padding: .25rem .6rem;
+            border-radius: 4px;
+            font-size: .8rem;
+            background: #0f3460;
+            color: #8ab4f8;
+        }
+        .batch-tag.done { background: #1a3a1a; color: #7fbf7f; }
+        .batch-tag.current { background: #4a1a3a; color: #e94560; font-weight: 600; }
+        .batch-tag.pending { background: #222; color: #555; }
     </style>
 </head>
 <body>
@@ -279,7 +386,10 @@
 <div class="tray-section">
     <div class="tray-header">
         <h2>Item Tray</h2>
-        <button class="add-btn" id="addBtn" title="Add image">+</button>
+        <div class="tray-header-buttons">
+            <button class="batch-btn" id="batchBtn" title="Batch add items">&#9776; Batch</button>
+            <button class="add-btn" id="addBtn" title="Add image">+</button>
+        </div>
     </div>
     <div class="tray" data-zone="tray"></div>
 </div>
@@ -292,7 +402,10 @@
             <button id="closeOverlay">&times;</button>
         </h2>
         <div class="search-form">
-            <input type="text" id="searchInput" placeholder="Search for images…" autocomplete="off">
+            <div class="input-wrap">
+                <input type="text" id="searchInput" placeholder="Search for images…" autocomplete="off">
+                <div class="spinner" id="searchSpinner"></div>
+            </div>
             <button id="searchBtn">Search</button>
         </div>
         <div id="searchResults" class="search-results"></div>
@@ -302,10 +415,11 @@
 
 <script>
 (function () {
-    /* ── Drag & Drop ── */
+    /* ── Drag & Drop (pointer + touch) ── */
     const zones = document.querySelectorAll('[data-zone]');
     let draggedTile = null;
 
+    /* -- Desktop HTML5 drag -- */
     function makeDraggable(tile) {
         tile.setAttribute('draggable', 'true');
         tile.addEventListener('dragstart', e => {
@@ -318,6 +432,22 @@
             draggedTile = null;
             zones.forEach(z => z.classList.remove('drag-over'));
         });
+
+        /* -- Touch drag -- */
+        tile.addEventListener('touchstart', handleTouchStart, { passive: false });
+    }
+
+    /* Return the child element to insertBefore, or null to append */
+    function getInsertBeforeElement(zone, x, y, draggedEl) {
+        const children = [...zone.children].filter(c => c !== draggedEl);
+        for (const child of children) {
+            const rect = child.getBoundingClientRect();
+            /* If cursor is above this child's row, insert before it */
+            if (y < rect.top) return child;
+            /* If in the same row and cursor is left of center, insert before */
+            if (y < rect.bottom && x < rect.left + rect.width / 2) return child;
+        }
+        return null;
     }
 
     zones.forEach(zone => {
@@ -331,13 +461,139 @@
             e.preventDefault();
             zone.classList.remove('drag-over');
             if (draggedTile) {
-                zone.appendChild(draggedTile);
+                const ref = getInsertBeforeElement(zone, e.clientX, e.clientY, draggedTile);
+                zone.insertBefore(draggedTile, ref);
             }
         });
     });
 
+    /* Let tier labels act as drop targets that forward to their tier-items zone */
+    document.querySelectorAll('.tier-label').forEach(label => {
+        label.addEventListener('dragover', e => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const zone = label.parentElement.querySelector('[data-zone]');
+            if (zone) zone.classList.add('drag-over');
+        });
+        label.addEventListener('dragleave', () => {
+            const zone = label.parentElement.querySelector('[data-zone]');
+            if (zone) zone.classList.remove('drag-over');
+        });
+        label.addEventListener('drop', e => {
+            e.preventDefault();
+            const zone = label.parentElement.querySelector('[data-zone]');
+            if (zone) {
+                zone.classList.remove('drag-over');
+                if (draggedTile) {
+                    /* Dropping on the label = insert at the front */
+                    zone.insertBefore(draggedTile, zone.firstChild);
+                }
+            }
+        });
+    });
+
+    /* Extend tray drop region to the left margin area around the tray box */
+    const traySection = document.querySelector('.tray-section');
+    const trayZone = document.querySelector('[data-zone="tray"]');
+    traySection.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        trayZone.classList.add('drag-over');
+    });
+    traySection.addEventListener('dragleave', e => {
+        if (!traySection.contains(e.relatedTarget)) {
+            trayZone.classList.remove('drag-over');
+        }
+    });
+    traySection.addEventListener('drop', e => {
+        e.preventDefault();
+        trayZone.classList.remove('drag-over');
+        if (draggedTile) {
+            const ref = getInsertBeforeElement(trayZone, e.clientX, e.clientY, draggedTile);
+            trayZone.insertBefore(draggedTile, ref);
+        }
+    });
+
+    /* ── Touch Drag Handling ── */
+    let touchClone = null;
+    let touchSourceTile = null;
+    let touchOffsetX = 0, touchOffsetY = 0;
+
+    function handleTouchStart(e) {
+        const tile = e.currentTarget;
+        /* ignore if tapping the remove button */
+        if (e.target.classList.contains('remove-btn')) return;
+        e.preventDefault();
+        touchSourceTile = tile;
+        const rect = tile.getBoundingClientRect();
+        const touch = e.touches[0];
+        touchOffsetX = touch.clientX - rect.left;
+        touchOffsetY = touch.clientY - rect.top;
+
+        touchClone = tile.cloneNode(true);
+        touchClone.style.position = 'fixed';
+        touchClone.style.zIndex = '200';
+        touchClone.style.width = rect.width + 'px';
+        touchClone.style.height = rect.height + 'px';
+        touchClone.style.opacity = '0.85';
+        touchClone.style.pointerEvents = 'none';
+        touchClone.style.left = (touch.clientX - touchOffsetX) + 'px';
+        touchClone.style.top = (touch.clientY - touchOffsetY) + 'px';
+        document.body.appendChild(touchClone);
+        tile.classList.add('dragging');
+
+        document.addEventListener('touchmove', handleTouchMove, { passive: false });
+        document.addEventListener('touchend', handleTouchEnd);
+    }
+
+    function handleTouchMove(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        if (touchClone) {
+            touchClone.style.left = (touch.clientX - touchOffsetX) + 'px';
+            touchClone.style.top = (touch.clientY - touchOffsetY) + 'px';
+        }
+        /* highlight drop target */
+        zones.forEach(z => z.classList.remove('drag-over'));
+        const target = getDropZone(touch.clientX, touch.clientY);
+        if (target) target.classList.add('drag-over');
+    }
+
+    function handleTouchEnd(e) {
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
+        zones.forEach(z => z.classList.remove('drag-over'));
+        if (touchClone) { touchClone.remove(); touchClone = null; }
+        if (!touchSourceTile) return;
+        touchSourceTile.classList.remove('dragging');
+
+        const touch = e.changedTouches[0];
+        const target = getDropZone(touch.clientX, touch.clientY);
+        if (target) {
+            const ref = getInsertBeforeElement(target, touch.clientX, touch.clientY, touchSourceTile);
+            target.insertBefore(touchSourceTile, ref);
+        }
+        touchSourceTile = null;
+    }
+
+    function getDropZone(x, y) {
+        for (const zone of zones) {
+            const r = zone.getBoundingClientRect();
+            /* Extend tray hit region 40px to the left */
+            const leftEdge = zone.dataset.zone === 'tray' ? r.left - 40 : r.left;
+            if (x >= leftEdge && x <= r.right && y >= r.top && y <= r.bottom) return zone;
+        }
+        /* Check if cursor is over a tier label and map to adjacent tier-items zone */
+        const el = document.elementFromPoint(x, y);
+        if (el && el.classList.contains('tier-label')) {
+            const zone = el.parentElement.querySelector('[data-zone]');
+            if (zone) return zone;
+        }
+        return null;
+    }
+
     /* ── Create tile from thumbnail url ── */
-    function createTile(src, title) {
+    function createTile(src, title, w, h) {
         const tile = document.createElement('div');
         tile.className = 'tile';
         tile.title = title || '';
@@ -345,6 +601,17 @@
         const img = document.createElement('img');
         img.src = src;
         img.alt = title || '';
+        /* If we know the aspect ratio from the API, apply top-crop immediately for tall images */
+        if (w && h && h > w * 1.2) {
+            img.style.objectPosition = 'top';
+        } else if (!w || !h) {
+            /* Fallback: detect on load if no dims provided */
+            img.onload = function () {
+                if (img.naturalHeight > img.naturalWidth * 1.2) {
+                    img.style.objectPosition = 'top';
+                }
+            };
+        }
         tile.appendChild(img);
 
         const btn = document.createElement('button');
@@ -374,20 +641,21 @@
         overlay.classList.add('active');
         searchInput.focus();
     });
-    closeOverlay.addEventListener('click', () => overlay.classList.remove('active'));
-    overlay.addEventListener('click', e => {
-        if (e.target === overlay) overlay.classList.remove('active');
-    });
+    /* close handlers are setup at end of script */
 
     /* ── Search ── */
+    let batchInputMode = false;
+
     async function doSearch() {
+        if (batchInputMode) return;
         const query = searchInput.value.trim();
         if (!query) return;
 
         searchResults.innerHTML = '';
-        searchStatus.textContent = 'Searching…';
+        searchStatus.textContent = '';
         searchStatus.className = 'search-status';
         searchBtn.disabled = true;
+        document.getElementById('searchSpinner').classList.add('active');
 
         try {
             const res = await fetch('/api/search', {
@@ -408,7 +676,13 @@
                 return;
             }
 
-            searchStatus.textContent = '';
+            if (data.canonical && data.canonical.toLowerCase() !== query.toLowerCase()) {
+                searchStatus.innerHTML = 'Showing results for <strong>' +
+                    data.canonical.replace(/</g, '&lt;') + '</strong>';
+                searchStatus.className = 'search-status';
+            } else {
+                searchStatus.textContent = '';
+            }
             data.images.forEach(img => {
                 const card = document.createElement('div');
                 card.className = 'result-card';
@@ -416,10 +690,14 @@
                 const imgEl = document.createElement('img');
                 imgEl.src = img.thumbnail;
                 imgEl.alt = img.title || '';
+                /* Top-crop tall images in the preview grid too */
+                if (img.width && img.height && img.height > img.width * 1.2) {
+                    imgEl.style.objectPosition = 'top';
+                }
                 card.appendChild(imgEl);
 
                 card.addEventListener('click', () => {
-                    tray.appendChild(createTile(img.thumbnail, img.title));
+                    tray.appendChild(createTile(img.thumbnail, img.title, img.width, img.height));
                     overlay.classList.remove('active');
                     searchResults.innerHTML = '';
                     searchStatus.textContent = 'Search for something to add to your tier list.';
@@ -433,12 +711,241 @@
             searchStatus.className = 'search-error';
         } finally {
             searchBtn.disabled = false;
+            document.getElementById('searchSpinner').classList.remove('active');
         }
     }
 
     searchBtn.addEventListener('click', doSearch);
     searchInput.addEventListener('keydown', e => {
         if (e.key === 'Enter') doSearch();
+    });
+
+    /* ── Batch Mode ── */
+    const batchBtn = document.getElementById('batchBtn');
+    let batchItems = [];
+    let batchIndex = 0;
+    let batchActive = false;
+    let batchImageCache = {};
+    let batchImagePromises = {};
+
+    batchBtn.addEventListener('click', () => {
+        batchActive = false;
+        batchItems = [];
+        batchIndex = 0;
+        overlay.classList.add('active');
+        showBatchInput();
+    });
+
+    function showBatchInput() {
+        batchInputMode = true;
+        const box = document.querySelector('.overlay-box');
+        box.querySelector('h2').innerHTML = 'Batch Add Items <button id="closeBatchOverlay">&times;</button>';
+        box.querySelector('h2 button').addEventListener('click', closeBatch);
+
+        searchResults.innerHTML = '';
+        searchStatus.textContent = '';
+
+        const form = document.querySelector('.search-form');
+        form.style.display = '';
+        searchInput.placeholder = 'Enter a category (e.g., "fruits", "Call of Duty games")…';
+        searchInput.value = '';
+        searchBtn.textContent = 'Generate';
+        searchBtn.disabled = false;
+        document.getElementById('searchSpinner').classList.remove('active');
+
+        // Swap handlers
+        searchBtn.onclick = doBatchGenerate;
+        searchInput.onkeydown = e => { if (e.key === 'Enter') doBatchGenerate(); };
+        searchInput.focus();
+    }
+
+    function closeBatch() {
+        batchActive = false;
+        batchInputMode = false;
+        overlay.classList.remove('active');
+        document.querySelector('.search-form').style.display = '';
+        resetOverlay();
+    }
+
+    function resetOverlay() {
+        batchInputMode = false;
+        const box = document.querySelector('.overlay-box');
+        box.querySelector('h2').innerHTML = 'Search Images <button id="closeOverlay">&times;</button>';
+        box.querySelector('h2 button').addEventListener('click', () => overlay.classList.remove('active'));
+        searchInput.placeholder = 'Search for images…';
+        searchInput.value = '';
+        searchBtn.textContent = 'Search';
+        searchBtn.disabled = false;
+        searchBtn.onclick = null;
+        searchInput.onkeydown = null;
+        searchResults.innerHTML = '';
+        searchStatus.textContent = 'Search for something to add to your tier list.';
+        searchStatus.className = 'search-status';
+        document.getElementById('searchSpinner').classList.remove('active');
+        document.querySelector('.search-form').style.display = '';
+    }
+
+    async function doBatchGenerate() {
+        const category = searchInput.value.trim();
+        if (!category) return;
+
+        searchResults.innerHTML = '';
+        searchStatus.textContent = '';
+        searchBtn.disabled = true;
+        document.getElementById('searchSpinner').classList.add('active');
+
+        try {
+            const res = await fetch('/api/batch-generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category }),
+            });
+            const data = await res.json();
+
+            if (!res.ok || !data.items || data.items.length === 0) {
+                searchStatus.textContent = data.error || 'Could not generate items.';
+                searchStatus.className = 'search-error';
+                return;
+            }
+
+            batchItems = data.items;
+            batchIndex = 0;
+            batchActive = true;
+            batchInputMode = false;
+
+            // Fire all image searches in parallel upfront
+            batchImageCache = {};
+            batchImagePromises = {};
+            batchItems.forEach(item => {
+                batchImagePromises[item] = fetch('/api/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: item }),
+                })
+                .then(r => r.json())
+                .then(d => {
+                    batchImageCache[item] = d;
+                    return d;
+                })
+                .catch(() => {
+                    batchImageCache[item] = { error: true };
+                    return { error: true };
+                });
+            });
+
+            showBatchItem();
+        } catch (err) {
+            searchStatus.textContent = 'Network error. Please try again.';
+            searchStatus.className = 'search-error';
+        } finally {
+            searchBtn.disabled = false;
+            document.getElementById('searchSpinner').classList.remove('active');
+        }
+    }
+
+    function renderBatchTags() {
+        let html = '<div class="batch-items-list">';
+        batchItems.forEach((item, i) => {
+            let cls = 'batch-tag';
+            if (i < batchIndex) cls += ' done';
+            else if (i === batchIndex) cls += ' current';
+            else cls += ' pending';
+            html += `<span class="${cls}">${item.replace(/</g, '&lt;')}</span>`;
+        });
+        html += '</div>';
+        return html;
+    }
+
+    async function showBatchItem() {
+        if (!batchActive || batchIndex >= batchItems.length) {
+            // All done
+            searchResults.innerHTML = '';
+            searchStatus.innerHTML = renderBatchTags() +
+                '<div style="text-align:center;color:#7fbf7f;padding:1rem 0;">All items added! Close this dialog to start ranking.</div>';
+            const box = document.querySelector('.overlay-box h2');
+            box.innerHTML = 'Batch Complete <button id="closeBatchOverlay">&times;</button>';
+            box.querySelector('button').addEventListener('click', closeBatch);
+            return;
+        }
+
+        const itemName = batchItems[batchIndex];
+        const progress = `<div class="batch-progress">Item <strong>${batchIndex + 1}</strong> of <strong>${batchItems.length}</strong></div>`;
+        const tags = renderBatchTags();
+        const label = `<div class="batch-item-label"><span>${itemName.replace(/</g, '&lt;')}</span><button class="skip-btn" id="skipItemBtn">Skip</button></div>`;
+
+        searchResults.innerHTML = '';
+        searchStatus.innerHTML = progress + tags + label;
+        searchStatus.className = 'search-status';
+
+        // Hide search form during batch item selection
+        document.querySelector('.search-form').style.display = 'none';
+
+        const box = document.querySelector('.overlay-box h2');
+        box.innerHTML = 'Choose Image <button id="closeBatchOverlay">&times;</button>';
+        box.querySelector('button').addEventListener('click', closeBatch);
+
+        document.getElementById('skipItemBtn').addEventListener('click', () => {
+            batchIndex++;
+            showBatchItem();
+        });
+
+        // Use prefetched results — wait for the promise if not resolved yet
+        const cached = batchImageCache[itemName];
+        if (cached) {
+            renderBatchImages(itemName, cached);
+        } else {
+            searchResults.innerHTML = '<div class="search-status">Loading images…</div>';
+            try {
+                const data = await batchImagePromises[itemName];
+                if (!batchActive) return;
+                renderBatchImages(itemName, data);
+            } catch (err) {
+                if (!batchActive) return;
+                searchResults.innerHTML = '<div class="search-error">Network error. Skipping…</div>';
+                setTimeout(() => { batchIndex++; showBatchItem(); }, 800);
+            }
+        }
+    }
+
+    function renderBatchImages(itemName, data) {
+        searchResults.innerHTML = '';
+        if (data.error || !data.images || data.images.length === 0) {
+            searchResults.innerHTML = '<div class="search-error">No results found. Skipping…</div>';
+            setTimeout(() => { batchIndex++; showBatchItem(); }, 800);
+            return;
+        }
+        data.images.forEach(img => {
+            const card = document.createElement('div');
+            card.className = 'result-card';
+
+            const imgEl = document.createElement('img');
+            imgEl.src = img.thumbnail;
+            imgEl.alt = img.title || '';
+            if (img.width && img.height && img.height > img.width * 1.2) {
+                imgEl.style.objectPosition = 'top';
+            }
+            card.appendChild(imgEl);
+
+            card.addEventListener('click', () => {
+                tray.appendChild(createTile(img.thumbnail, itemName, img.width, img.height));
+                batchIndex++;
+                showBatchItem();
+            });
+
+            searchResults.appendChild(card);
+        });
+    }
+
+    /* Restore overlay to normal mode when closing normally */
+    const origClose = () => {
+        overlay.classList.remove('active');
+        if (batchActive) { batchActive = false; }
+        document.querySelector('.search-form').style.display = '';
+        resetOverlay();
+    };
+    closeOverlay.addEventListener('click', origClose);
+    overlay.addEventListener('click', e => {
+        if (e.target === overlay) origClose();
     });
 })();
 </script>
